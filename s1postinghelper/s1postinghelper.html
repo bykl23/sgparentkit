@@ -833,15 +833,13 @@ Yuhua Secondary School	West	-	-	13	13`;
         const schools = parseSchoolData(rawData);
 
         // Area to region mapping
-        const areaRegionMap = {
-            'Central': 'Central',
-            'North': 'North',
-            'North-East': 'North-East',
-            'East': 'East',
-            'West': 'West'
+        const REGIONS = {
+            "North": ["Sembawang", "Woodlands", "Yishun"],
+            "North-East": ["Ang Mo Kio", "Hougang", "Punggol", "Sengkang", "Serangoon"],
+            "East": ["Bedok", "Geylang", "Marine Parade", "Pasir Ris", "Tampines"],
+            "West": ["Bukit Batok", "Bukit Panjang", "Choa Chu Kang", "Clementi", "Jurong East", "Jurong West"],
+            "Central": ["Bishan", "Bukit Merah", "Bukit Timah", "Central", "Kallang", "Novena", "Queenstown", "Toa Payoh"],
         };
-
-        const regions = ['North', 'North-East', 'East', 'West', 'Central'];
 
         function App() {
             const [score, setScore] = useState('');
@@ -872,7 +870,7 @@ Yuhua Secondary School	West	-	-	13	13`;
             };
 
             const toggleRegion = (region) => {
-                const regionAreas = [...new Set(schools.filter(s => areaRegionMap[s.zone] === region).map(s => s.zone))];
+                const regionAreas = REGIONS[region];
                 const allSelected = regionAreas.every(a => selectedAreas.includes(a));
 
                 if (allSelected) {
@@ -883,7 +881,7 @@ Yuhua Secondary School	West	-	-	13	13`;
             };
 
             const isRegionActive = (region) => {
-                const regionAreas = [...new Set(schools.filter(s => areaRegionMap[s.zone] === region).map(s => s.zone))];
+                const regionAreas = REGIONS[region];
                 return regionAreas.length > 0 && regionAreas.every(a => selectedAreas.includes(a));
             };
 
@@ -1052,7 +1050,7 @@ Yuhua Secondary School	West	-	-	13	13`;
                             <div className="section-title">Filter by Area</div>
                         </div>
 
-                        {regions.map(region => (
+                        {Object.entries(REGIONS).map(([region, areas]) => (
                             <div key={region} className="region-group">
                                 <div className="region-header">
                                     <button
@@ -1064,7 +1062,7 @@ Yuhua Secondary School	West	-	-	13	13`;
                                     <span className="region-name">{region} Region</span>
                                 </div>
                                 <div className="area-chips">
-                                    {[...new Set(schools.filter(s => areaRegionMap[s.zone] === region).map(s => s.zone))].map(area => (
+                                    {areas.map(area => (
                                         <button
                                             key={area}
                                             className={`area-chip ${selectedAreas.includes(area) ? 'active' : ''}`}
@@ -1080,9 +1078,18 @@ Yuhua Secondary School	West	-	-	13	13`;
                         <div className="filter-actions">
                             <button
                                 className="filter-action-btn"
+                                onClick={() => {
+                                    const allAreas = Object.values(REGIONS).flat();
+                                    setSelectedAreas(allAreas);
+                                }}
+                            >
+                                Select all
+                            </button>
+                            <button
+                                className="filter-action-btn"
                                 onClick={() => setSelectedAreas([])}
                             >
-                                Clear All
+                                Clear
                             </button>
                             <button
                                 className="filter-action-btn"
