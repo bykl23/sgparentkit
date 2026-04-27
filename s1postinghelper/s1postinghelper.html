@@ -1,0 +1,1333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>S1 Posting Helper - PSLE Secondary School Shortlisting</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;400;500;600&family=JetBrains+Mono:wght@400;500&family=Lora:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Lora', serif;
+            background: #faf9f7;
+            color: #2d2d2d;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-family: 'Fraunces', serif;
+            font-size: 2.5rem;
+            font-weight: 500;
+            color: #1a1a1a;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            color: #666;
+            font-style: italic;
+        }
+
+        .section {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #f0eee9;
+        }
+
+        .step-number {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            background: #e8e6e1;
+            border-radius: 50%;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #555;
+        }
+
+        .section-title {
+            font-family: 'Fraunces', serif;
+            font-size: 1.4rem;
+            font-weight: 500;
+            color: #1a1a1a;
+        }
+
+        .section-count {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            color: #888;
+            margin-left: 8px;
+        }
+
+        .input-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .input-label {
+            font-family: 'Fraunces', serif;
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: #444;
+        }
+
+        .score-input {
+            padding: 12px 16px;
+            border: 2px solid #e0ded9;
+            border-radius: 8px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.1rem;
+            transition: all 0.2s;
+            background: #faf9f7;
+        }
+
+        .score-input:focus {
+            outline: none;
+            border-color: #8b7355;
+            background: white;
+        }
+
+        .input-hint {
+            font-size: 0.85rem;
+            color: #888;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .chip-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .chip {
+            padding: 10px 18px;
+            border: 2px solid #e0ded9;
+            border-radius: 24px;
+            background: white;
+            font-family: 'Lora', serif;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            user-select: none;
+        }
+
+        .chip:hover {
+            border-color: #c0bdbc;
+            background: #faf9f7;
+        }
+
+        .chip.active {
+            background: #8b7355;
+            border-color: #8b7355;
+            color: white;
+        }
+
+        .chip.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .region-group {
+            margin-bottom: 16px;
+        }
+
+        .region-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .region-toggle {
+            padding: 8px 16px;
+            border: 2px solid #e0ded9;
+            border-radius: 20px;
+            background: white;
+            font-family: 'Lora', serif;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .region-toggle:hover {
+            border-color: #c0bdbc;
+        }
+
+        .region-toggle.active {
+            background: #a89075;
+            border-color: #a89075;
+            color: white;
+        }
+
+        .region-name {
+            font-family: 'Fraunces', serif;
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: #555;
+        }
+
+        .area-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-left: 20px;
+        }
+
+        .area-chip {
+            padding: 8px 14px;
+            border: 2px solid #e8e6e1;
+            border-radius: 16px;
+            background: white;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .area-chip:hover {
+            border-color: #c0bdbc;
+        }
+
+        .area-chip.active {
+            background: #d4c5b0;
+            border-color: #d4c5b0;
+            color: #1a1a1a;
+        }
+
+        .filter-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .filter-action-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 8px;
+            background: #f0eee9;
+            font-family: 'Lora', serif;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .filter-action-btn:hover {
+            background: #e0ded9;
+        }
+
+        .sort-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding: 12px 16px;
+            background: #faf9f7;
+            border-radius: 8px;
+        }
+
+        .sort-options {
+            display: flex;
+            gap: 8px;
+        }
+
+        .sort-btn {
+            padding: 8px 16px;
+            border: 2px solid transparent;
+            border-radius: 6px;
+            background: white;
+            font-family: 'Lora', serif;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .sort-btn:hover {
+            border-color: #d0cdc7;
+        }
+
+        .sort-btn.active {
+            background: #8b7355;
+            color: white;
+        }
+
+        .results-count {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .results-table th {
+            text-align: left;
+            padding: 12px 16px;
+            background: #f5f3ef;
+            font-family: 'Fraunces', serif;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #444;
+            border-bottom: 2px solid #e0ded9;
+        }
+
+        .results-table td {
+            padding: 14px 16px;
+            border-bottom: 1px solid #f0eee9;
+            vertical-align: middle;
+        }
+
+        .results-table tr:hover {
+            background: #faf9f7;
+        }
+
+        .school-name {
+            font-family: 'Fraunces', serif;
+            font-size: 1rem;
+            font-weight: 500;
+            color: #1a1a1a;
+        }
+
+        .school-area {
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .track-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            background: #e8e6e1;
+            border-radius: 4px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: #555;
+        }
+
+        .cut-off-score {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1rem;
+            font-weight: 500;
+            color: #1a1a1a;
+        }
+
+        .buffer-pill {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .buffer-safe {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .buffer-borderline {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .buffer-tight {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .tags-cell {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .sap-badge {
+            padding: 4px 8px;
+            background: #cce5ff;
+            color: #004085;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .hcl-warning {
+            padding: 4px 8px;
+            background: #fff3cd;
+            color: #856404;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .pick-btn {
+            padding: 8px 16px;
+            border: 2px solid #8b7355;
+            border-radius: 6px;
+            background: white;
+            font-family: 'Lora', serif;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #8b7355;
+        }
+
+        .pick-btn:hover:not(:disabled) {
+            background: #8b7355;
+            color: white;
+        }
+
+        .pick-btn.added {
+            background: #8b7355;
+            color: white;
+            border-color: #8b7355;
+        }
+
+        .pick-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .choices-grid {
+            display: grid;
+            gap: 12px;
+        }
+
+        .choice-row {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px;
+            border: 2px dashed #d0cdc7;
+            border-radius: 8px;
+            background: #faf9f7;
+            min-height: 80px;
+        }
+
+        .choice-row.filled {
+            border-style: solid;
+            border-color: #e0ded9;
+            background: white;
+        }
+
+        .priority-num {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            background: #e8e6e1;
+            border-radius: 50%;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #555;
+        }
+
+        .choice-info {
+            flex: 1;
+        }
+
+        .choice-school {
+            font-family: 'Fraunces', serif;
+            font-size: 1rem;
+            font-weight: 500;
+            color: #1a1a1a;
+        }
+
+        .choice-details {
+            font-size: 0.85rem;
+            color: #666;
+            margin-top: 4px;
+        }
+
+        .choice-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .move-btn {
+            width: 32px;
+            height: 32px;
+            border: 2px solid #e0ded9;
+            border-radius: 6px;
+            background: white;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .move-btn:hover:not(:disabled) {
+            border-color: #8b7355;
+            color: #8b7355;
+        }
+
+        .move-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .remove-btn {
+            padding: 8px 16px;
+            border: 2px solid #dc3545;
+            border-radius: 6px;
+            background: white;
+            font-family: 'Lora', serif;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #dc3545;
+        }
+
+        .remove-btn:hover {
+            background: #dc3545;
+            color: white;
+        }
+
+        .strategy-panel {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .strategy-breakdown {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .strategy-item {
+            padding: 16px;
+            background: white;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .strategy-value {
+            font-family: 'Fraunces', serif;
+            font-size: 2rem;
+            font-weight: 500;
+            color: #1a1a1a;
+        }
+
+        .strategy-label {
+            font-size: 0.85rem;
+            color: #666;
+            margin-top: 4px;
+        }
+
+        .strategy-hint {
+            font-size: 0.75rem;
+            color: #888;
+            font-family: 'JetBrains Mono', monospace;
+            margin-top: 4px;
+        }
+
+        .areas-covered {
+            margin-top: 16px;
+            padding: 12px;
+            background: white;
+            border-radius: 6px;
+        }
+
+        .areas-title {
+            font-family: 'Fraunces', serif;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #444;
+            margin-bottom: 8px;
+        }
+
+        .areas-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .area-tag {
+            padding: 4px 10px;
+            background: #e8e6e1;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            color: #555;
+        }
+
+        .export-section {
+            margin-top: 20px;
+        }
+
+        .export-preview {
+            padding: 16px;
+            background: #1a1a1a;
+            color: #f8f9fa;
+            border-radius: 8px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            line-height: 1.8;
+            margin-bottom: 12px;
+            white-space: pre-wrap;
+        }
+
+        .export-btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            background: #8b7355;
+            color: white;
+            font-family: 'Lora', serif;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .export-btn:hover {
+            background: #6d5a43;
+        }
+
+        .buffer-explanation {
+            margin-top: 12px;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            color: #666;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px;
+            border-top: 1px solid #e0ded9;
+            font-size: 0.85rem;
+            color: #888;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.8rem;
+            }
+
+            .input-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .results-table {
+                font-size: 0.85rem;
+            }
+
+            .results-table th,
+            .results-table td {
+                padding: 8px;
+            }
+
+            .choice-row {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .choice-actions {
+                width: 100%;
+                justify-content: flex-end;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useMemo } = React;
+
+        // Raw school data - tab-separated
+        const rawData = `School	Zone	IP	PG3	PG2	PG1
+Anglican High School	Central	-	-	9	9
+Beatty Secondary School	Central	-	-	12	12
+Bedok Green Secondary School	East	-	-	14	14
+Bedok South Secondary School	East	-	-	15	15
+Bedok View Secondary School	East	-	-	16	16
+Bendemeir Secondary School	Central	-	-	11	11
+Boon Lay Secondary School	West	-	-	13	13
+Bowen Secondary School	North-East	-	-	12	12
+Bukit Batok Secondary School	West	-	-	14	14
+Bukit Merah Secondary School	Central	-	-	15	15
+Bukit Panjang Government High School	West	-	M9	M10	M11
+Bukit View Secondary School	West	-	-	15	15
+Catholic High School	Central	M8	M8	M9	M10
+Cedar Girls' Secondary School	Central	-	M9	M10	M11
+Changi Coast Secondary School	East	-	-	-	-
+CHIJ Katong Convent	East	-	M10	M11	M12
+CHIJ Our Lady Queen Of Peace	Central	-	-	13	13
+CHIJ Saint Joseph's Convent	Central	-	-	12	12
+CHIJ Secondary (Toa Payoh)	Central	M8	M8	M9	M10
+Christ Church Secondary School	West	-	-	14	14
+Chua Chu Kang Secondary School	West	-	-	13	13
+Chung Cheng High School (Main)	Central	M8	M8	M9	M10
+Chung Cheng High School (Yishun)	North	-	M9	M10	M11
+Commonwealth Secondary School	West	-	-	12	12
+Compassvale Secondary School	North-East	-	-	13	13
+Crescent Girls' School	Central	M8	M8	M9	M10
+Damai Secondary School	North-East	-	-	14	14
+Deyi Secondary School	North	-	-	12	12
+Dunman High School	East	M7	M7	M8	M9
+Dunman Secondary School	East	-	-	11	11
+East Spring Secondary School	East	-	-	15	15
+East View Secondary School	East	-	-	14	14
+Edgefield Secondary School	North-East	-	-	10	10
+Elementary School	East	-	-	-	-
+Endeavour Primary School	East	-	-	-	-
+Fairfield Methodist School (Secondary)	West	-	-	10	10
+Farrer Park Primary School	Central	-	-	-	-
+Farrer Secondary School	Central	-	-	-	-
+Frontier Secondary School	West	-	-	14	14
+Gan Eng Seng School	Central	-	9	10	11
+Geylang Methodist School (Secondary)	Central	-	-	11	11
+Greendale Secondary School	North-East	-	-	13	13
+Greenridge Secondary School	West	-	-	14	14
+Guangyang Secondary School	Central	-	-	13	13
+Hai Sing Catholic School	East	-	M10	M11	M12
+Hillgrove Secondary School	West	-	-	13	13
+Hwa Chong Institution	Central	M7	M7	M8	M9
+Huamin Secondary School	North	-	-	11	11
+Hong Kah Secondary School	West	-	-	14	14
+Hougang Secondary School	North-East	-	-	13	13
+Innova Secondary School	North	-	-	12	12
+Jurong Secondary School	West	-	-	12	12
+Jurongville Secondary School	West	-	-	13	13
+Kranji Secondary School	West	-	-	14	14
+Kuo Chuan Presbyterian Secondary School	Central	-	M9	M10	M11
+Mayflower Secondary School	North	-	-	12	12
+Meridian Secondary School	East	-	-	12	12
+Montfort Secondary School	East	-	-	11	11
+Nanyang Girls' High School	Central	M7	M7	M8	M9
+Naval Base Secondary School	North	-	-	13	13
+New Town Secondary School	West	-	-	14	14
+North Vista Secondary School	North-East	-	-	12	12
+Northbrooks Secondary School	North	-	-	13	13
+Northland Secondary School	North	-	-	12	12
+Oasis Secondary School	East	-	-	13	13
+Orchid Park Secondary School	East	-	-	14	14
+Pasir Ris Crest Secondary School	East	-	M9	M10	M11
+Pasir Ris Secondary School	East	-	-	13	13
+Peicai Secondary School	North-East	-	-	14	14
+Pioneer Secondary School	West	-	-	13	13
+Punggol Green Secondary School	North-East	-	-	12	12
+Punggol Secondary School	North-East	-	-	13	13
+Queenstown Secondary School	Central	-	-	13	13
+Raffles Girls' Institution	Central	M7	M7	M8	M9
+Raffles Institution	Central	M7	M7	M8	M9
+Riverside Secondary School	North	-	-	11	11
+River Valley High School	Central	M8	M8	M9	M10
+Rosyth School	North-East	-	-	-	-
+Sembawang Secondary School	North	-	-	14	14
+Seng Kang Secondary School	North-East	-	-	13	13
+Serangoon Garden Secondary School	Central	-	-	12	12
+Serangoon Junior College	Central	-	-	-	-
+Shuqun Secondary School	West	-	-	13	13
+Siglap Secondary School	East	-	-	14	14
+South View Secondary School	West	-	M9	M10	M11
+Springfield Secondary School	North-East	-	-	14	14
+St. Andrew's Secondary School	Central	-	M9	M10	M11
+St. Gabriel's Secondary School	Central	-	-	11	11
+St. Hilda's Secondary School	East	-	M9	M10	M11
+St. Joseph's Institution	Central	M8	M8	M9	M10
+St. Margaret's Secondary School	Central	M8	M8	M9	M10
+St. Patrick's School	East	-	-	11	11
+Swiss Cottage Secondary School	Central	-	M9	M10	M11
+Tampines Meridian Junior College	East	-	-	-	-
+Tampines Secondary School	East	-	-	12	12
+Tanjong Katong Girls' School	East	M8	M8	M9	M10
+Tanjong Katong Secondary School	East	-	-	11	11
+Temasek Junior College	East	-	-	-	-
+Temasek Secondary School	East	-	M9	M10	M11
+Unity Secondary School	West	-	-	13	13
+Victoria School	Central	M8	M8	M9	M10
+West Grove Secondary School	West	-	-	14	14
+West Spring Secondary School	West	-	-	13	13
+Westwood Secondary School	West	-	-	14	14
+Woodlands Ring Secondary School	North	-	-	13	13
+Woodlands Secondary School	North	-	-	12	12
+Xinmin Secondary School	North-East	-	M9	M10	M11
+Yio Chu Kang Secondary School	North	-	-	12	12
+Yishun Secondary School	North	-	-	13	13
+Yuhua Secondary School	West	-	-	13	13`;
+
+        // Parse school data
+        function parseSchoolData(data) {
+            const lines = data.trim().split('\n');
+            const headers = lines[0].split('\t');
+            const schools = [];
+
+            for (let i = 1; i < lines.length; i++) {
+                const values = lines[i].split('\t');
+                if (values.length < headers.length) continue;
+
+                const school = {
+                    name: values[0],
+                    zone: values[1],
+                    tracks: {}
+                };
+
+                ['IP', 'PG3', 'PG2', 'PG1'].forEach((track, idx) => {
+                    const val = values[idx + 2];
+                    if (val && val !== '-') {
+                        const isSAP = val.includes('M');
+                        const score = parseInt(val.replace('M', ''));
+                        school.tracks[track] = { score, isSAP };
+                    }
+                });
+
+                schools.push(school);
+            }
+
+            return schools;
+        }
+
+        const schools = parseSchoolData(rawData);
+
+        // Area to region mapping
+        const areaRegionMap = {
+            'Central': 'Central',
+            'North': 'North',
+            'North-East': 'North-East',
+            'East': 'East',
+            'West': 'West'
+        };
+
+        const regions = ['North', 'North-East', 'East', 'West', 'Central'];
+
+        function App() {
+            const [score, setScore] = useState('');
+            const [hclLevel, setHclLevel] = useState('none');
+            const [selectedTracks, setSelectedTracks] = useState(['IP', 'PG3', 'PG2', 'PG1']);
+            const [selectedAreas, setSelectedAreas] = useState([]);
+            const [showBufferOnly, setShowBufferOnly] = useState(false);
+            const [showSAPOnly, setShowSAPOnly] = useState(false);
+            const [sortBy, setSortBy] = useState('safest');
+            const [picks, setPicks] = useState([]);
+
+            const validScore = score === '' || (parseInt(score) >= 4 && parseInt(score) <= 36);
+
+            const toggleTrack = (track) => {
+                setSelectedTracks(prev =>
+                    prev.includes(track)
+                        ? prev.filter(t => t !== track)
+                        : [...prev, track]
+                );
+            };
+
+            const toggleArea = (area) => {
+                setSelectedAreas(prev =>
+                    prev.includes(area)
+                        ? prev.filter(a => a !== area)
+                        : [...prev, area]
+                );
+            };
+
+            const toggleRegion = (region) => {
+                const regionAreas = [...new Set(schools.filter(s => areaRegionMap[s.zone] === region).map(s => s.zone))];
+                const allSelected = regionAreas.every(a => selectedAreas.includes(a));
+
+                if (allSelected) {
+                    setSelectedAreas(prev => prev.filter(a => !regionAreas.includes(a)));
+                } else {
+                    setSelectedAreas(prev => [...new Set([...prev, ...regionAreas])]);
+                }
+            };
+
+            const isRegionActive = (region) => {
+                const regionAreas = [...new Set(schools.filter(s => areaRegionMap[s.zone] === region).map(s => s.zone))];
+                return regionAreas.length > 0 && regionAreas.every(a => selectedAreas.includes(a));
+            };
+
+            const addPick = (school, track) => {
+                if (picks.length >= 6) return;
+                if (picks.some(p => p.school.name === school.name && p.track === track)) return;
+                setPicks([...picks, { school, track }]);
+            };
+
+            const removePick = (index) => {
+                setPicks(picks.filter((_, i) => i !== index));
+            };
+
+            const movePick = (index, direction) => {
+                const newPicks = [...picks];
+                const newIndex = index + direction;
+                if (newIndex < 0 || newIndex >= newPicks.length) return;
+                [newPicks[index], newPicks[newIndex]] = [newPicks[newIndex], newPicks[index]];
+                setPicks(newPicks);
+            };
+
+            const filteredSchools = useMemo(() => {
+                if (!validScore || score === '') return [];
+
+                const numScore = parseInt(score);
+                const results = [];
+
+                schools.forEach(school => {
+                    if (selectedAreas.length > 0 && !selectedAreas.includes(school.zone)) return;
+
+                    Object.entries(school.tracks).forEach(([track, data]) => {
+                        if (!selectedTracks.includes(track)) return;
+                        if (showSAPOnly && !data.isSAP) return;
+
+                        const buffer = numScore - data.score;
+                        if (showBufferOnly && buffer < 2) return;
+
+                        const meetsHCL = hclLevel === 'distinction' || 
+                            (data.isSAP && hclLevel === 'merit') ||
+                            !data.isSAP;
+
+                        const isHCLRisky = data.isSAP && hclLevel !== 'distinction' && hclLevel !== 'merit';
+                        const isHCLLow = data.isSAP && hclLevel === 'none';
+
+                        results.push({
+                            school,
+                            track,
+                            cutOff: data.score,
+                            isSAP: data.isSAP,
+                            buffer,
+                            isHCLRisky,
+                            isHCLLow,
+                            meetsHCL
+                        });
+                    });
+                });
+
+                // Sort results
+                if (sortBy === 'safest') {
+                    results.sort((a, b) => b.buffer - a.buffer);
+                } else if (sortBy === 'cutoff') {
+                    results.sort((a, b) => a.cutOff - b.cutOff);
+                } else if (sortBy === 'name') {
+                    results.sort((a, b) => a.school.name.localeCompare(b.school.name));
+                }
+
+                return results;
+            }, [score, hclLevel, selectedTracks, selectedAreas, showBufferOnly, showSAPOnly, sortBy]);
+
+            const strategyBreakdown = useMemo(() => {
+                if (!validScore || score === '') return { overshoot: 0, reach: 0, safe: 0, areas: [] };
+
+                const numScore = parseInt(score);
+                let overshoot = 0, reach = 0, safe = 0;
+                const areas = new Set();
+
+                picks.forEach(({ school, track }) => {
+                    areas.add(school.zone);
+                    const trackData = school.tracks[track];
+                    if (!trackData) return;
+
+                    const buffer = numScore - trackData.score;
+                    if (buffer < 0) overshoot++;
+                    else if (buffer <= 1 || trackData.isSAP && hclLevel !== 'distinction') reach++;
+                    else safe++;
+                });
+
+                return { overshoot, reach, safe, areas: Array.from(areas) };
+            }, [picks, score, hclLevel]);
+
+            const exportText = useMemo(() => {
+                if (picks.length === 0) return 'No choices selected yet.';
+                return picks.map((p, i) => `${i + 1}. ${p.school.name} (${p.track}) - Cut-off: ${p.school.tracks[p.track]?.score || 'N/A'}`).join('\n');
+            }, [picks]);
+
+            const copyToClipboard = () => {
+                navigator.clipboard.writeText(exportText);
+                alert('Copied to clipboard!');
+            };
+
+            return (
+                <div className="container">
+                    <div className="header">
+                        <h1>S1 Posting Helper</h1>
+                        <p>PSLE Secondary School Shortlisting Tool</p>
+                    </div>
+
+                    {/* Step 1: Input */}
+                    <div className="section">
+                        <div className="section-header">
+                            <div className="step-number">1</div>
+                            <div className="section-title">Enter Your Details</div>
+                        </div>
+
+                        <div className="input-grid">
+                            <div className="input-group">
+                                <label className="input-label">PSLE AL Score</label>
+                                <input
+                                    type="number"
+                                    className="score-input"
+                                    value={score}
+                                    onChange={(e) => setScore(e.target.value)}
+                                    min="4"
+                                    max="36"
+                                    placeholder="Enter score"
+                                />
+                                <span className="input-hint">Range 4 (best) – 36 (worst)</span>
+                            </div>
+
+                            <div className="input-group">
+                                <label className="input-label">Higher Chinese Level</label>
+                                <div className="chip-group">
+                                    {['none', 'pass', 'merit', 'distinction'].map(level => (
+                                        <button
+                                            key={level}
+                                            className={`chip ${hclLevel === level ? 'active' : ''}`}
+                                            onClick={() => setHclLevel(level)}
+                                        >
+                                            {level.charAt(0).toUpperCase() + level.slice(1)}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="input-group">
+                                <label className="input-label">Posting Tracks</label>
+                                <div className="chip-group">
+                                    {['IP', 'PG3', 'PG2', 'PG1'].map(track => (
+                                        <button
+                                            key={track}
+                                            className={`chip ${selectedTracks.includes(track) ? 'active' : ''}`}
+                                            onClick={() => toggleTrack(track)}
+                                        >
+                                            {track}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Step 2: Filters */}
+                    <div className="section">
+                        <div className="section-header">
+                            <div className="step-number">2</div>
+                            <div className="section-title">Filter by Area</div>
+                        </div>
+
+                        {regions.map(region => (
+                            <div key={region} className="region-group">
+                                <div className="region-header">
+                                    <button
+                                        className={`region-toggle ${isRegionActive(region) ? 'active' : ''}`}
+                                        onClick={() => toggleRegion(region)}
+                                    >
+                                        {isRegionActive(region) ? '✓' : '○'} {region}
+                                    </button>
+                                    <span className="region-name">{region} Region</span>
+                                </div>
+                                <div className="area-chips">
+                                    {[...new Set(schools.filter(s => areaRegionMap[s.zone] === region).map(s => s.zone))].map(area => (
+                                        <button
+                                            key={area}
+                                            className={`area-chip ${selectedAreas.includes(area) ? 'active' : ''}`}
+                                            onClick={() => toggleArea(area)}
+                                        >
+                                            {selectedAreas.includes(area) ? '✓' : '○'} {area}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        ))}
+
+                        <div className="filter-actions">
+                            <button
+                                className="filter-action-btn"
+                                onClick={() => setSelectedAreas([])}
+                            >
+                                Clear All
+                            </button>
+                            <button
+                                className="filter-action-btn"
+                                onClick={() => setShowBufferOnly(!showBufferOnly)}
+                            >
+                                {showBufferOnly ? '✓ Safety buffer only' : 'Safety buffer only (+2)'}
+                            </button>
+                            <button
+                                className="filter-action-btn"
+                                onClick={() => setShowSAPOnly(!showSAPOnly)}
+                            >
+                                {showSAPOnly ? '✓ SAP schools only' : 'SAP schools only'}
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Step 3: Results */}
+                    <div className="section">
+                        <div className="section-header">
+                            <div className="step-number">3</div>
+                            <div className="section-title">Matching Schools</div>
+                            {filteredSchools.length > 0 && (
+                                <span className="section-count">— {filteredSchools.length} schools</span>
+                            )}
+                        </div>
+
+                        {validScore && score !== '' && (
+                            <>
+                                <div className="sort-bar">
+                                    <div className="sort-options">
+                                        <button
+                                            className={`sort-btn ${sortBy === 'safest' ? 'active' : ''}`}
+                                            onClick={() => setSortBy('safest')}
+                                        >
+                                            Safest
+                                        </button>
+                                        <button
+                                            className={`sort-btn ${sortBy === 'cutoff' ? 'active' : ''}`}
+                                            onClick={() => setSortBy('cutoff')}
+                                        >
+                                            Cut-off
+                                        </button>
+                                        <button
+                                            className={`sort-btn ${sortBy === 'name' ? 'active' : ''}`}
+                                            onClick={() => setSortBy('name')}
+                                        >
+                                            Name
+                                        </button>
+                                    </div>
+                                    <span className="results-count">{filteredSchools.length} results</span>
+                                </div>
+
+                                <table className="results-table">
+                                    <thead>
+                                        <tr>
+                                            <th style={{ width: '30%' }}>School</th>
+                                            <th style={{ width: '15%' }}>Area</th>
+                                            <th style={{ width: '10%' }}>Track</th>
+                                            <th style={{ width: '10%' }}>Cut-off</th>
+                                            <th style={{ width: '15%' }}>Buffer</th>
+                                            <th style={{ width: '15%' }}>Tags</th>
+                                            <th style={{ width: '5%' }}></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {filteredSchools.map((result, idx) => (
+                                            <tr key={`${result.school.name}-${result.track}`}>
+                                                <td>
+                                                    <div className="school-name">{result.school.name}</div>
+                                                </td>
+                                                <td>
+                                                    <div className="school-area">{result.school.zone}</div>
+                                                </td>
+                                                <td>
+                                                    <span className="track-badge">{result.track}</span>
+                                                </td>
+                                                <td>
+                                                    <span className="cut-off-score">{result.cutOff}</span>
+                                                </td>
+                                                <td>
+                                                    <span className={`buffer-pill ${
+                                                        result.buffer >= 2 ? 'buffer-safe' :
+                                                        result.buffer >= 0 ? 'buffer-borderline' : 'buffer-tight'
+                                                    }`}>
+                                                        {result.buffer >= 0 ? '+' : ''}{result.buffer}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <div className="tags-cell">
+                                                        {result.isSAP && <span className="sap-badge">SAP</span>}
+                                                        {result.isHCLLow && <span className="hcl-warning">HCL low</span>}
+                                                        {result.isHCLRisky && !result.isHCLLow && <span className="hcl-warning">HCL risky</span>}
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <button
+                                                        className={`pick-btn ${picks.some(p => p.school.name === result.school.name && p.track === result.track) ? 'added' : ''}`}
+                                                        onClick={() => addPick(result.school, result.track)}
+                                                        disabled={picks.length >= 6 && !picks.some(p => p.school.name === result.school.name && p.track === result.track)}
+                                                    >
+                                                        {picks.some(p => p.school.name === result.school.name && p.track === result.track) ? '✓ Added' : 'Add'}
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+
+                                <div className="buffer-explanation">
+                                    <strong>Buffer explanation:</strong> Shows how many points above the cut-off your score is. 
+                                    Green (+2 or more) = Safe | Orange (0 to +1) = Borderline | Red (negative) = Below cut-off
+                                </div>
+                            </>
+                        )}
+
+                        {(!validScore || score === '') && (
+                            <p style={{ textAlign: 'center', color: '#888', padding: '40px' }}>
+                                Enter a valid PSLE score (4-36) to see matching schools.
+                            </p>
+                        )}
+                    </div>
+
+                    {/* Step 4: Six Choices */}
+                    <div className="section">
+                        <div className="section-header">
+                            <div className="step-number">4</div>
+                            <div className="section-title">Your 6 Choices</div>
+                            <span className="section-count">— {picks.length}/6 selected</span>
+                        </div>
+
+                        <div className="choices-grid">
+                            {[0, 1, 2, 3, 4, 5].map(idx => {
+                                const pick = picks[idx];
+                                return (
+                                    <div key={idx} className={`choice-row ${pick ? 'filled' : ''}`}>
+                                        <div className="priority-num">{idx + 1}</div>
+                                        {pick ? (
+                                            <>
+                                                <div className="choice-info">
+                                                    <div className="choice-school">{pick.school.name}</div>
+                                                    <div className="choice-details">
+                                                        {pick.track} • Cut-off: {pick.school.tracks[pick.track]?.score} • 
+                                                        Zone: {pick.school.zone}
+                                                        {pick.school.tracks[pick.track]?.isSAP && hclLevel !== 'distinction' && (
+                                                            <span style={{ marginLeft: '8px', color: '#856404' }}>⚠ HCL risky</span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                                <div className="choice-actions">
+                                                    <button
+                                                        className="move-btn"
+                                                        onClick={() => movePick(idx, -1)}
+                                                        disabled={idx === 0}
+                                                    >
+                                                        ↑
+                                                    </button>
+                                                    <button
+                                                        className="move-btn"
+                                                        onClick={() => movePick(idx, 1)}
+                                                        disabled={idx === picks.length - 1}
+                                                    >
+                                                        ↓
+                                                    </button>
+                                                    <button
+                                                        className="remove-btn"
+                                                        onClick={() => removePick(idx)}
+                                                    >
+                                                        Remove
+                                                    </button>
+                                                </div>
+                                            </>
+                                        ) : (
+                                            <div className="choice-info" style={{ color: '#888', fontStyle: 'italic' }}>
+                                                Empty slot - select a school from the results above
+                                            </div>
+                                        )}
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                        {picks.length > 0 && (
+                            <div className="strategy-panel">
+                                <div className="section-header" style={{ borderBottom: 'none', paddingBottom: '8px', marginBottom: '12px' }}>
+                                    <div className="section-title" style={{ fontSize: '1.1rem' }}>Strategy Summary</div>
+                                </div>
+
+                                <div className="strategy-breakdown">
+                                    <div className="strategy-item">
+                                        <div className="strategy-value" style={{ color: '#dc3545' }}>{strategyBreakdown.overshoot}</div>
+                                        <div className="strategy-label">Over cut-off</div>
+                                        <div className="strategy-hint">−1 to −2 buffer</div>
+                                    </div>
+                                    <div className="strategy-item">
+                                        <div className="strategy-value" style={{ color: '#fd7e14' }}>{strategyBreakdown.reach}</div>
+                                        <div className="strategy-label">Reach</div>
+                                        <div className="strategy-hint">0 or +1 buffer</div>
+                                    </div>
+                                    <div className="strategy-item">
+                                        <div className="strategy-value" style={{ color: '#28a745' }}>{strategyBreakdown.safe}</div>
+                                        <div className="strategy-label">Safe</div>
+                                        <div className="strategy-hint">+2 buffer or more</div>
+                                    </div>
+                                </div>
+
+                                <div className="areas-covered">
+                                    <div className="areas-title">Areas covered:</div>
+                                    <div className="areas-list">
+                                        {strategyBreakdown.areas.length > 0 ? (
+                                            strategyBreakdown.areas.map(area => (
+                                                <span key={area} className="area-tag">{area}</span>
+                                            ))
+                                        ) : (
+                                            <span style={{ color: '#888', fontStyle: 'italic' }}>none yet</span>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Step 5: Export */}
+                    <div className="section">
+                        <div className="section-header">
+                            <div className="step-number">5</div>
+                            <div className="section-title">Export Choices</div>
+                        </div>
+
+                        <div className="export-section">
+                            <div className="export-preview">{exportText}</div>
+                            <button className="export-btn" onClick={copyToClipboard}>
+                                Copy to Clipboard
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="footer">
+                        <p><strong>Disclaimer:</strong> This tool is for reference only. Cut-off scores are based on previous years' data and may vary. 
+                        Please verify with MOE's official sources before making final decisions.</p>
+                    </div>
+                </div>
+            );
+        }
+
+        ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    </script>
+</body>
+</html>
