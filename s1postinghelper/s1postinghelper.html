@@ -204,14 +204,12 @@ const HCL_RANK = { None: 0, Pass: 1, Merit: 2, Distinction: 3 };
 // Component
 // ─────────────────────────────────────────────────────────────────────────────
 function PSLEShortlister() {
-  const [score, setScore] = React.useState(15);
-  const [scoreInput, setScoreInput] = React.useState("15");
+  const [score, setScore] = React.useState(10);
+  const [scoreInput, setScoreInput] = React.useState("10");
   const [hcl, setHcl] = React.useState("None");
   const [zones, setZones] = React.useState(new Set(AREAS));
-  const [tracks, setTracks] = React.useState(new Set(["PG3", "PG2"]));
-  const [safetyOnly, setSafetyOnly] = React.useState(false);
-  const [sapOnly, setSapOnly] = React.useState(false);
-  const [sortBy, setSortBy] = React.useState("buffer"); // buffer | name | cutoff
+  const [tracks, setTracks] = React.useState(new Set(["IP", "PG3", "PG2", "PG1"]));
+  const [sortBy, setSortBy] = React.useState("cutoff"); // name | cutoff
   const [picks, setPicks] = React.useState([]); // array of school.no in priority order
 
   const toggle = (set, val, setter) => {
@@ -226,7 +224,6 @@ function PSLEShortlister() {
 
     for (const s of SCHOOLS) {
       if (!zones.has(s.zone)) continue;
-      if (sapOnly && !s.isSAP) continue;
 
       // Find best matching track among user's selected tracks
       // Allow buffer down to -2 (score up to 2 points above cut-off) so user can see near-misses
@@ -249,18 +246,15 @@ function PSLEShortlister() {
       const hclWarning = best.sap && !hclMeetsSAP;
       const hclRisky = hclWarning; // tied score with weak HCL = not safe
 
-      if (safetyOnly && (best.buffer < 2 || hclRisky)) continue;
-
       out.push({ ...s, match: best, hclWarning, hclRisky });
     }
 
     out.sort((a, b) => {
       if (sortBy === "name") return a.name.localeCompare(b.name);
-      if (sortBy === "cutoff") return a.match.cutoff - b.match.cutoff;
-      return b.match.buffer - a.match.buffer; // safest first
+      return a.match.cutoff - b.match.cutoff; // cut-off ascending
     });
     return out;
-  }, [score, hcl, zones, tracks, safetyOnly, sapOnly, sortBy]);
+  }, [score, hcl, zones, tracks, sortBy]);
 
   const pickedSchools = picks
     .map((no) => SCHOOLS.find((s) => s.no === no))
@@ -361,6 +355,11 @@ function PSLEShortlister() {
         .tone-tight { background: #991b1b; color: #fef2f2; }
         .tone-sap { background: #1e1b4b; color: #eef2ff; }
         .tone-warn { background: #fbbf24; color: #422006; }
+        /* Posting track tier colors — IP brightest, then PG3 → PG2 → PG1 */
+        .track-ip  { background: #7c2d12; color: #fff7ed; }
+        .track-pg3 { background: #1e40af; color: #eff6ff; }
+        .track-pg2 { background: #0e7490; color: #ecfeff; }
+        .track-pg1 { background: #4d7c0f; color: #f7fee7; }
         .num-input::-webkit-inner-spin-button { opacity: 1; }
       `}</style>
 
@@ -514,21 +513,6 @@ function PSLEShortlister() {
             </div>
           </div>
 
-          {/* Toggles */}
-          <div className="flex flex-wrap gap-3 mt-4">
-            <button
-              onClick={() => setSafetyOnly(!safetyOnly)}
-              className={`chip px-3 py-1.5 text-sm ${safetyOnly ? "on" : "bg-white"}`}
-            >
-              {safetyOnly ? "✓ " : ""}Safety buffer only (≥2 pts comfort)
-            </button>
-            <button
-              onClick={() => setSapOnly(!sapOnly)}
-              className={`chip px-3 py-1.5 text-sm ${sapOnly ? "on" : "bg-white"}`}
-            >
-              {sapOnly ? "✓ " : ""}SAP schools only
-            </button>
-          </div>
         </section>
 
         {/* RESULTS */}
@@ -538,7 +522,6 @@ function PSLEShortlister() {
             <div className="flex items-center gap-2 mono text-xs">
               <span className="text-stone-500 uppercase tracking-widest text-[10px]">Sort:</span>
               {[
-                { id: "buffer", label: "Safest" },
                 { id: "cutoff", label: "Cut-off" },
                 { id: "name", label: "Name" },
               ].map((o) => (
@@ -557,10 +540,11 @@ function PSLEShortlister() {
             <div className="grid grid-cols-12 mono text-[10px] uppercase tracking-widest text-stone-500 px-5 py-3 border-b border-stone-200 bg-stone-50">
               <div className="col-span-4">School</div>
               <div className="col-span-2">Area</div>
-              <div className="col-span-1">Track</div>
+              <div className="col-span-1 text-center">Track</div>
               <div className="col-span-1 text-right">Cut-off</div>
               <div className="col-span-1 text-right">Buffer</div>
-              <div className="col-span-2">Tags</div>
+              <div className="col-span-1 text-center">SAP</div>
+              <div className="col-span-1 text-center">HCL</div>
               <div className="col-span-1 text-right">Pick</div>
             </div>
 
@@ -583,16 +567,20 @@ function PSLEShortlister() {
                       <div className="display font-semibold text-stone-900">{s.name}</div>
                     </div>
                     <div className="col-span-2 mono text-xs text-stone-600">{s.zone}</div>
-                    <div className="col-span-1 mono text-xs font-semibold">{s.match.track}</div>
+                    <div className="col-span-1 text-center">
+                      <span className={`pill track-${s.match.track.toLowerCase()}`}>{s.match.track}</span>
+                    </div>
                     <div className="col-span-1 mono text-sm text-right">
                       {s.match.cutoff}{s.match.sap && <span className="text-indigo-700 font-bold ml-0.5">M</span>}
                     </div>
                     <div className="col-span-1 mono text-sm text-right">
                       <span className={`pill tone-${tone}`}>{s.match.buffer >= 0 ? `+${s.match.buffer}` : s.match.buffer}</span>
                     </div>
-                    <div className="col-span-2 flex gap-1 flex-wrap">
+                    <div className="col-span-1 text-center">
                       {s.match.sap && <span className="pill tone-sap">SAP</span>}
-                      {s.hclWarning && <span className="pill tone-warn">HCL low</span>}
+                    </div>
+                    <div className="col-span-1 text-center">
+                      {s.hclWarning && <span className="pill tone-warn">low</span>}
                     </div>
                     <div className="col-span-1 text-right">
                       <button
@@ -619,7 +607,7 @@ function PSLEShortlister() {
             Schools up to 2 points above your score are shown so you can see near-miss reach options.
             <br/>
             <span className="text-indigo-700 font-bold">M</span> next to a cut-off = SAP track (Higher Chinese Merit required).
-            If your HCL is below Merit, the school is flagged <span className="pill tone-warn">HCL low</span> and treated as not safe regardless of score buffer.
+            If your HCL is below Merit, the school is flagged <span className="pill tone-warn">low</span> and treated as not safe regardless of score buffer.
           </div>
         </section>
 
@@ -645,11 +633,12 @@ function PSLEShortlister() {
                     <div className="flex-1">
                       <div className="display font-semibold flex items-center gap-2">
                         {s.name}
+                        {s.match && <span className={`pill track-${s.match.track.toLowerCase()}`}>{s.match.track}</span>}
                         {s.hclRisky && <span className="pill tone-warn">HCL risky</span>}
                       </div>
                       <div className="mono text-[11px] text-stone-500">
                         {s.zone}
-                        {s.match && ` · ${s.match.track} · cut-off ${s.match.cutoff}${s.match.sap ? "M" : ""} · ${s.match.buffer >= 0 ? `+${s.match.buffer}` : s.match.buffer} buffer`}
+                        {s.match && ` · cut-off ${s.match.cutoff}${s.match.sap ? "M" : ""} · ${s.match.buffer >= 0 ? `+${s.match.buffer}` : s.match.buffer} buffer`}
                         {!s.match && ` · no longer matches your filters`}
                       </div>
                     </div>
