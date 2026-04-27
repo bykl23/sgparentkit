@@ -305,17 +305,16 @@ function PSLEShortlister() {
   // Strategy summary
   const strategy = React.useMemo(() => {
     const overshoot = pickedWithMatch.filter((s) => s.match && s.match.buffer < 0).length;
-    const reach = pickedWithMatch.filter((s) => s.match && s.match.buffer >= 0 && (s.match.buffer < 2 || s.hclRisky)).length;
-    const safe = pickedWithMatch.filter((s) => s.match && s.match.buffer >= 2 && !s.hclRisky).length;
+    const reach = pickedWithMatch.filter((s) => s.match && (s.match.buffer === 0 || s.hclRisky)).length;
+    const safe = pickedWithMatch.filter((s) => s.match && s.match.buffer >= 1 && !s.hclRisky).length;
     const zoneSet = new Set(pickedWithMatch.map((s) => s.zone));
     return { overshoot, reach, safe, zones: [...zoneSet] };
   }, [pickedWithMatch]);
 
-  const bufferTone = (buffer, hclRisky) => {
+  const bufferTone = (buffer) => {
     if (buffer < 0) return "tight";        // red — over cut-off
-    if (hclRisky) return "tight";          // red — SAP HCL gap
-    if (buffer >= 2) return "comfort";     // green — safe
-    return "borderline";                    // orange — +0 or +1
+    if (buffer >= 1) return "comfort";     // green — +1, +2, or more
+    return "borderline";                    // yellow — exactly +0
   };
 
   return (
@@ -351,7 +350,7 @@ function PSLEShortlister() {
         }
         .tone-safe { background: #064e3b; color: #ecfdf5; }
         .tone-comfort { background: #15803d; color: #f0fdf4; }
-        .tone-borderline { background: #c2410c; color: #fff7ed; }
+        .tone-borderline { background: #ca8a04; color: #fefce8; }
         .tone-tight { background: #991b1b; color: #fef2f2; }
         .tone-sap { background: #1e1b4b; color: #eef2ff; }
         .tone-warn { background: #fbbf24; color: #422006; }
@@ -556,7 +555,7 @@ function PSLEShortlister() {
 
             <div className="max-h-[480px] overflow-y-auto">
               {results.map((s) => {
-                const tone = bufferTone(s.match.buffer, s.hclRisky);
+                const tone = bufferTone(s.match.buffer);
                 const isPicked = picks.includes(s.no);
                 return (
                   <div
@@ -603,7 +602,7 @@ function PSLEShortlister() {
 
           <div className="mono text-[11px] text-stone-500 mt-3 leading-relaxed">
             <span className="text-stone-700 font-semibold">Buffer</span> = cut-off minus your score.
-            Tones: <span className="pill tone-comfort">+2</span> safe · <span className="pill tone-borderline">+0</span> borderline · <span className="pill tone-tight">−1</span> over cut-off.
+            Tones: <span className="pill tone-comfort">+1</span> safe · <span className="pill tone-borderline">+0</span> borderline · <span className="pill tone-tight">−1</span> over cut-off.
             Schools up to 2 points above your score are shown so you can see near-miss reach options.
             <br/>
             <span className="text-indigo-700 font-bold">M</span> next to a cut-off = SAP track (Higher Chinese Merit required).
@@ -660,8 +659,8 @@ function PSLEShortlister() {
               <div className="mono text-[10px] tracking-widest text-stone-400 uppercase mb-4">Strategy</div>
               <div className="space-y-4">
                 <StratRow label="Over cut-off" value={strategy.overshoot} hint="−1 to −2 buffer" />
-                <StratRow label="Reach" value={strategy.reach} hint="0 or +1 buffer" />
-                <StratRow label="Safe" value={strategy.safe} hint="+2 buffer or more" />
+                <StratRow label="Reach" value={strategy.reach} hint="exactly +0 buffer" />
+                <StratRow label="Safe" value={strategy.safe} hint="+1 buffer or more" />
                 <div className="border-t border-stone-700 pt-4">
                   <div className="mono text-[10px] tracking-widest text-stone-400 uppercase mb-2">Areas covered</div>
                   <div className="display text-sm leading-relaxed">
