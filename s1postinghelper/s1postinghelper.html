@@ -252,24 +252,24 @@ function PSLEShortlister() {
       if (!schoolTypes.has(s.type)) continue;
 
       // Find best matching track among user's selected tracks
-      // buffer = score - cutoff. Lower (more negative) = safer. Allow up to +2 (near-miss).
+      // difference = score - cutoff. Lower (more negative) = safer. Allow up to +2 (near-miss).
       let best = null;
       for (const t of TRACKS) {
         if (!tracks.has(t)) continue;
         const cell = s.tracks[t];
         if (cell.value == null) continue;
-        const buffer = score - cell.value;
-        if (buffer > 2) continue; // exclude only if more than 2 pts above cut-off
-        if (!best || buffer < best.buffer) { // lower buffer = safer
-          best = { track: t, cutoff: cell.value, sap: cell.sap, buffer };
+        const difference = score - cell.value;
+        if (difference > 2) continue; // exclude only if more than 2 pts above cut-off
+        if (!best || difference < best.difference) { // lower difference = safer
+          best = { track: t, cutoff: cell.value, sap: cell.sap, difference };
         }
       }
       if (!best) continue;
 
       // HCL rule for SAP tracks: only flag HCL low when the score doesn't already
-      // give a comfortable buffer. If buffer < 0 (score below cut-off), the student
+      // give a comfortable difference. If difference < 0 (score below cut-off), the student
       // is comfortably qualified by score, so don't show the HCL warning.
-      const hclWarning = best.sap && !hclMeetsSAP && best.buffer >= 0;
+      const hclWarning = best.sap && !hclMeetsSAP && best.difference >= 0;
       const hclRisky = hclWarning;
 
       out.push({ ...s, match: best, hclWarning, hclRisky });
@@ -294,13 +294,13 @@ function PSLEShortlister() {
       if (!tracks.has(t)) continue;
       const cell = s.tracks[t];
       if (cell.value == null) continue;
-      const buffer = score - cell.value;
-      if (buffer > 2) continue;
-      if (!best || buffer < best.buffer) {
-        best = { track: t, cutoff: cell.value, sap: cell.sap, buffer };
+      const difference = score - cell.value;
+      if (difference > 2) continue;
+      if (!best || difference < best.difference) {
+        best = { track: t, cutoff: cell.value, sap: cell.sap, difference };
       }
     }
-    const hclRisky = best && best.sap && !hclMeetsSAP && best.buffer >= 0;
+    const hclRisky = best && best.sap && !hclMeetsSAP && best.difference >= 0;
     return { ...s, match: best, hclRisky };
   });
 
@@ -352,16 +352,16 @@ function PSLEShortlister() {
 
   // Strategy summary
   const strategy = React.useMemo(() => {
-    const overshoot = pickedWithMatch.filter((s) => s.match && s.match.buffer > 0).length;
-    const reach = pickedWithMatch.filter((s) => s.match && (s.match.buffer === 0 || s.hclRisky)).length;
-    const safe = pickedWithMatch.filter((s) => s.match && s.match.buffer <= -1 && !s.hclRisky).length;
+    const overshoot = pickedWithMatch.filter((s) => s.match && s.match.difference > 0).length;
+    const reach = pickedWithMatch.filter((s) => s.match && (s.match.difference === 0 || s.hclRisky)).length;
+    const safe = pickedWithMatch.filter((s) => s.match && s.match.difference <= -1 && !s.hclRisky).length;
     const zoneSet = new Set(pickedWithMatch.map((s) => s.zone));
     return { overshoot, reach, safe, zones: [...zoneSet] };
   }, [pickedWithMatch]);
 
-  const bufferTone = (buffer) => {
-    if (buffer > 0) return "tight";        // red — over cut-off (+1, +2)
-    if (buffer < 0) return "comfort";      // green — below cut-off (safer)
+  const differenceTone = (difference) => {
+    if (difference > 0) return "tight";        // red — over cut-off (+1, +2)
+    if (difference < 0) return "comfort";      // green — below cut-off (safer)
     return "borderline";                    // yellow — exactly tied (0)
   };
 
@@ -423,12 +423,12 @@ function PSLEShortlister() {
               </div>
               <h1 className="display text-5xl md:text-6xl font-black leading-none tracking-tight">
                 Six Choices.<br/>
-                <span className="italic font-medium text-stone-500">Made carefully.</span>
+                <span className="italic font-medium text-stone-500">Decide carefully.</span>
               </h1>
             </div>
             <div className="mono text-xs text-stone-500 max-w-xs leading-relaxed">
               A shortlisting tool for Primary 6 students and parents.
-              Filters {SCHOOLS.length} secondary schools by score, track, and area using last year's cut-offs.
+              Filters {SCHOOLS.length} secondary schools by score, track, and area using 2025 cut-offs points.
             </div>
           </div>
         </div>
@@ -438,7 +438,7 @@ function PSLEShortlister() {
 
         {/* INPUT PANEL */}
         <section>
-          <SectionHeader num="01" title="Your details" />
+          <SectionHeader num="01" title="Student details" />
           <div className="grid md:grid-cols-12 gap-6 mt-6">
 
             {/* Score */}
@@ -486,7 +486,7 @@ function PSLEShortlister() {
                   </button>
                 ))}
               </div>
-              <div className="mono text-[10px] text-stone-500 mt-3">Required at Merit+ for SAP schools</div>
+              <div className="mono text-[10px] text-stone-500 mt-3">Additional criteria for SAP schools</div>
             </div>
 
             {/* Tracks */}
@@ -503,7 +503,7 @@ function PSLEShortlister() {
                   </button>
                 ))}
               </div>
-              <div className="mono text-[10px] text-stone-500 mt-3">Pick all you'd consider</div>
+              <div className="mono text-[10px] text-stone-500 mt-3">Pick all you would consider</div>
             </div>
 
             {/* School type */}
@@ -585,7 +585,7 @@ function PSLEShortlister() {
         {/* RESULTS */}
         <section>
           <div className="flex items-baseline justify-between flex-wrap gap-4">
-            <SectionHeader num="02" title="Eligible schools" count={results.length} />
+            <SectionHeader num="02" title="Recommended schools" count={results.length} />
             <div className="flex items-center gap-2 mono text-xs">
               <span className="text-stone-500 uppercase tracking-widest text-[10px]">Sort:</span>
               {[
@@ -609,7 +609,7 @@ function PSLEShortlister() {
               <div className="col-span-2">Area</div>
               <div className="col-span-1 text-center">Track</div>
               <div className="col-span-1 text-right">Cut-off</div>
-              <div className="col-span-1 text-right">Buffer</div>
+              <div className="col-span-1 text-right">Difference</div>
               <div className="col-span-1 text-center">SAP</div>
               <div className="col-span-1 text-center">HCL</div>
               <div className="col-span-1 text-right">Pick</div>
@@ -623,7 +623,7 @@ function PSLEShortlister() {
 
             <div className="max-h-[480px] overflow-y-auto">
               {results.map((s) => {
-                const tone = bufferTone(s.match.buffer);
+                const tone = differenceTone(s.match.difference);
                 const isPicked = picks.includes(s.no);
                 return (
                   <div
@@ -666,7 +666,7 @@ function PSLEShortlister() {
                         <span>{s.match.cutoff}{s.match.sap && <span className="text-indigo-700 font-bold ml-0.5">M</span>}</span>
                       </div>
                       <div className="md:col-span-1 mono text-sm md:text-right">
-                        <span className={`pill tone-${tone}`}>{s.match.buffer >= 0 ? `+${s.match.buffer}` : s.match.buffer}</span>
+                        <span className={`pill tone-${tone}`}>{s.match.difference >= 0 ? `+${s.match.difference}` : s.match.difference}</span>
                       </div>
                       <div className="md:col-span-1 md:text-center">
                         {s.match.sap && <span className="pill tone-sap">SAP</span>}
@@ -697,12 +697,12 @@ function PSLEShortlister() {
           </div>
 
           <div className="mono text-[11px] text-stone-500 mt-3 leading-relaxed">
-            <span className="text-stone-700 font-semibold">Buffer</span> = your score minus cut-off. Lower (more negative) = safer.
+            <span className="text-stone-700 font-semibold">difference</span> = your score minus cut-off. Lower (more negative) = safer.
             Tones: <span className="pill tone-comfort">−1</span> safe · <span className="pill tone-borderline">+0</span> borderline · <span className="pill tone-tight">+1</span> over cut-off.
             Schools where your score is up to 2 points above cut-off are shown so you can see realistic reach options.
             <br/>
             <span className="text-indigo-700 font-bold">M</span> next to a cut-off = SAP track (Higher Chinese Merit required).
-            If your HCL is below Merit and your score doesn't already qualify you comfortably, the school is flagged <span className="pill tone-warn">low</span> and treated as not safe.
+            If your HCL is below SAP school HCL requirement and your score doesn't already qualify you comfortably, the school is flagged <span className="pill tone-warn">low</span> and treated as not safe.
           </div>
         </section>
 
@@ -734,7 +734,7 @@ function PSLEShortlister() {
                       </div>
                       <div className="mono text-[11px] text-stone-500">
                         {s.zone}
-                        {s.match && ` · cut-off ${s.match.cutoff}${s.match.sap ? "M" : ""} · ${s.match.buffer >= 0 ? `+${s.match.buffer}` : s.match.buffer} buffer`}
+                        {s.match && ` · cut-off ${s.match.cutoff}${s.match.sap ? "M" : ""} · ${s.match.difference >= 0 ? `+${s.match.difference}` : s.match.difference} difference`}
                         {!s.match && ` · no longer matches your filters`}
                       </div>
                     </div>
@@ -755,9 +755,9 @@ function PSLEShortlister() {
             <aside className="bg-stone-900 text-stone-50 p-6">
               <div className="mono text-[10px] tracking-widest text-stone-400 uppercase mb-4">Strategy</div>
               <div className="space-y-4">
-                <StratRow label="Over cut-off" value={strategy.overshoot} hint="+1 to +2 buffer" />
-                <StratRow label="Reach" value={strategy.reach} hint="exactly +0 buffer" />
-                <StratRow label="Safe" value={strategy.safe} hint="−1 buffer or lower" />
+                <StratRow label="Over cut-off" value={strategy.overshoot} hint="+1 to +2 difference" />
+                <StratRow label="Reach" value={strategy.reach} hint="exactly +0 difference" />
+                <StratRow label="Safe" value={strategy.safe} hint="−1 difference or lower" />
                 <div className="border-t border-stone-700 pt-4">
                   <div className="mono text-[10px] tracking-widest text-stone-400 uppercase mb-2">Areas covered</div>
                   <div className="display text-sm leading-relaxed">
