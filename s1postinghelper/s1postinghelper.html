@@ -753,19 +753,19 @@ function PSLEShortlister() {
 
             {/* Strategy panel */}
             <aside className="bg-stone-900 text-stone-50 p-6">
-              <div className="mono text-[10px] tracking-widest text-stone-400 uppercase mb-4">Strategy</div>
+              <div className="mono text-[10px] tracking-widest text-stone-400 uppercase mb-4">Strategy based on 2025 cut-off</div>
               <div className="space-y-4">
-                <StratRow label="Over cut-off" value={strategy.overshoot} hint="+1 to +2 difference" />
-                <StratRow label="Reach" value={strategy.reach} hint="exactly +0 difference" />
+                <StratRow label="Risky" value={strategy.overshoot} hint="+1 to +2 difference" />
+                <StratRow label="Exact" value={strategy.reach} hint="exactly +0 difference" />
                 <StratRow label="Safe" value={strategy.safe} hint="−1 difference or lower" />
                 <div className="border-t border-stone-700 pt-4">
-                  <div className="mono text-[10px] tracking-widest text-stone-400 uppercase mb-2">Areas covered</div>
+                  <div className="mono text-[10px] tracking-widest text-stone-400 uppercase mb-2">School Districts</div>
                   <div className="display text-sm leading-relaxed">
                     {strategy.zones.length > 0 ? strategy.zones.join(" · ") : <span className="text-stone-500 italic">none yet</span>}
                   </div>
                 </div>
                 <div className="mono text-[11px] text-stone-400 leading-relaxed pt-2 border-t border-stone-700">
-                  A balanced set leans on Safe picks for the lower priority slots, with a few Reach picks at the top.
+                  A balanced set should have Safe picks for the middle priority, with a few Risky and Exact picks at the top and bottom.
                 </div>
               </div>
 
