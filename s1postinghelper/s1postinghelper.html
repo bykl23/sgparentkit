@@ -171,6 +171,17 @@ const parseCell = (cell) => {
   return { value: isNaN(num) ? null : num, sap };
 };
 
+// School type: Boys / Girls / Mixed. Unlisted = Mixed.
+const SCHOOL_TYPE = {
+  // Boys-only
+  1: "Boys", 4: "Boys", 5: "Boys", 6: "Boys", 12: "Boys", 14: "Boys",
+  17: "Boys", 18: "Boys", 29: "Boys", 33: "Boys", 62: "Boys", 126: "Boys",
+  // Girls-only
+  2: "Girls", 3: "Girls", 7: "Girls", 9: "Girls", 11: "Girls", 15: "Girls",
+  19: "Girls", 22: "Girls", 28: "Girls", 36: "Girls", 39: "Girls", 42: "Girls",
+  46: "Girls", 47: "Girls", 61: "Girls",
+};
+
 const SCHOOLS = RAW.trim().split("\n").map((line) => {
   const parts = line.split("\t");
   const [no, name, ipRaw, pg3Raw, pg2Raw, pg1Raw, zone] = parts;
@@ -178,12 +189,14 @@ const SCHOOLS = RAW.trim().split("\n").map((line) => {
   const pg3 = parseCell(pg3Raw);
   const pg2 = parseCell(pg2Raw);
   const pg1 = parseCell(pg1Raw);
+  const schoolNo = parseInt(no, 10);
   return {
-    no: parseInt(no, 10),
+    no: schoolNo,
     name,
     zone,
     tracks: { IP: ip, PG3: pg3, PG2: pg2, PG1: pg1 },
     isSAP: ip.sap || pg3.sap || pg2.sap || pg1.sap,
+    type: SCHOOL_TYPE[schoolNo] || "Mixed",
   };
 });
 
@@ -210,6 +223,7 @@ function PSLEShortlister() {
   const [zones, setZones] = React.useState(new Set(AREAS));
   const [tracks, setTracks] = React.useState(new Set(["IP", "PG3", "PG2", "PG1"]));
   const [sortBy, setSortBy] = React.useState("cutoff"); // name | cutoff
+  const [schoolTypes, setSchoolTypes] = React.useState(new Set(["Boys", "Girls", "Mixed"]));
   const [picks, setPicks] = React.useState([]); // array of school.no in priority order
 
   const toggle = (set, val, setter) => {
@@ -224,6 +238,7 @@ function PSLEShortlister() {
 
     for (const s of SCHOOLS) {
       if (!zones.has(s.zone)) continue;
+      if (!schoolTypes.has(s.type)) continue;
 
       // Find best matching track among user's selected tracks
       // buffer = score - cutoff. Lower (more negative) = safer. Allow up to +2 (near-miss).
@@ -254,7 +269,7 @@ function PSLEShortlister() {
       return a.match.cutoff - b.match.cutoff; // cut-off ascending
     });
     return out;
-  }, [score, hcl, zones, tracks, sortBy]);
+  }, [score, hcl, zones, tracks, sortBy, schoolTypes]);
 
   const pickedSchools = picks
     .map((no) => SCHOOLS.find((s) => s.no === no))
@@ -360,6 +375,9 @@ function PSLEShortlister() {
         .track-pg2 { background: #0e7490; color: #ecfeff; }
         .track-pg1 { background: #4d7c0f; color: #f7fee7; }
         .num-input::-webkit-inner-spin-button { opacity: 1; }
+        .tone-boys  { background: #1e3a5f; color: #dbeafe; }
+        .tone-girls { background: #6b1044; color: #fce7f3; }
+        .tone-mixed { background: #374151; color: #f3f4f6; }
       `}</style>
 
       {/* HEADER */}
@@ -391,7 +409,7 @@ function PSLEShortlister() {
           <div className="grid md:grid-cols-12 gap-6 mt-6">
 
             {/* Score */}
-            <div className="md:col-span-4 bg-white border border-stone-200 p-5">
+            <div className="md:col-span-3 bg-white border border-stone-200 p-5">
               <div className="mono text-[10px] tracking-widest text-stone-500 uppercase mb-3">PSLE AL Score</div>
               <input
                 type="text"
@@ -422,7 +440,7 @@ function PSLEShortlister() {
             </div>
 
             {/* HCL */}
-            <div className="md:col-span-4 bg-white border border-stone-200 p-5">
+            <div className="md:col-span-3 bg-white border border-stone-200 p-5">
               <div className="mono text-[10px] tracking-widest text-stone-500 uppercase mb-3">Higher Chinese</div>
               <div className="flex flex-wrap gap-2">
                 {["None", "Pass", "Merit", "Distinction"].map((h) => (
@@ -439,7 +457,7 @@ function PSLEShortlister() {
             </div>
 
             {/* Tracks */}
-            <div className="md:col-span-4 bg-white border border-stone-200 p-5">
+            <div className="md:col-span-3 bg-white border border-stone-200 p-5">
               <div className="mono text-[10px] tracking-widest text-stone-500 uppercase mb-3">Posting tracks</div>
               <div className="flex flex-wrap gap-2">
                 {TRACKS.map((t) => (
@@ -453,6 +471,23 @@ function PSLEShortlister() {
                 ))}
               </div>
               <div className="mono text-[10px] text-stone-500 mt-3">Pick all you'd consider</div>
+            </div>
+
+            {/* School type */}
+            <div className="md:col-span-3 bg-white border border-stone-200 p-5">
+              <div className="mono text-[10px] tracking-widest text-stone-500 uppercase mb-3">School type</div>
+              <div className="flex flex-wrap gap-2">
+                {["Boys", "Girls", "Mixed"].map((t) => (
+                  <button
+                    key={t}
+                    onClick={() => toggle(schoolTypes, t, setSchoolTypes)}
+                    className={`chip px-3 py-1.5 text-sm ${schoolTypes.has(t) ? "on" : "bg-white"}`}
+                  >
+                    {t}
+                  </button>
+                ))}
+              </div>
+              <div className="mono text-[10px] text-stone-500 mt-3">Single-sex or co-ed</div>
             </div>
 
             {/* Areas (planning areas grouped by region) */}
@@ -565,7 +600,10 @@ function PSLEShortlister() {
                     {/* Mobile-first card layout */}
                     <div className="md:col-span-4 flex items-start justify-between gap-3 md:block">
                       <div className="flex-1 min-w-0">
-                        <div className="display font-semibold text-stone-900 leading-tight">{s.name}</div>
+                        <div className="display font-semibold text-stone-900 leading-tight flex items-center gap-1.5 flex-wrap">
+                          {s.name}
+                          {s.type !== "Mixed" && <span className={`pill tone-${s.type.toLowerCase()}`}>{s.type}</span>}
+                        </div>
                         <div className="mono text-[11px] text-stone-500 mt-0.5 md:hidden">{s.zone}</div>
                       </div>
                       {/* Add button shown inline on mobile (right of name), separate column on desktop */}
@@ -657,6 +695,7 @@ function PSLEShortlister() {
                     <div className="flex-1">
                       <div className="display font-semibold flex items-center gap-2 flex-wrap">
                         <span className="break-words">{s.name}</span>
+                        {s.type !== "Mixed" && <span className={`pill tone-${s.type.toLowerCase()}`}>{s.type}</span>}
                         {s.match && <span className={`pill track-${s.match.track.toLowerCase()}`}>{s.match.track}</span>}
                         {s.hclRisky && <span className="pill tone-warn">HCL risky</span>}
                       </div>
