@@ -226,25 +226,25 @@ function PSLEShortlister() {
       if (!zones.has(s.zone)) continue;
 
       // Find best matching track among user's selected tracks
-      // Allow buffer down to -2 (score up to 2 points above cut-off) so user can see near-misses
+      // buffer = score - cutoff. Lower (more negative) = safer. Allow up to +2 (near-miss).
       let best = null;
       for (const t of TRACKS) {
         if (!tracks.has(t)) continue;
         const cell = s.tracks[t];
         if (cell.value == null) continue;
-        const buffer = cell.value - score;
-        if (buffer < -2) continue; // exclude only if more than 2 pts above cut-off
-        if (!best || buffer > best.buffer) {
+        const buffer = score - cell.value;
+        if (buffer > 2) continue; // exclude only if more than 2 pts above cut-off
+        if (!best || buffer < best.buffer) { // lower buffer = safer
           best = { track: t, cutoff: cell.value, sap: cell.sap, buffer };
         }
       }
       if (!best) continue;
 
-      // HCL rule for SAP tracks: if track requires Merit and student lacks it,
-      // the school is risky regardless of score buffer. If score == cutoff AND
-      // HCL fails, demote effective safety so safety-buffer filter excludes it.
-      const hclWarning = best.sap && !hclMeetsSAP;
-      const hclRisky = hclWarning; // tied score with weak HCL = not safe
+      // HCL rule for SAP tracks: only flag HCL low when the score doesn't already
+      // give a comfortable buffer. If buffer < 0 (score below cut-off), the student
+      // is comfortably qualified by score, so don't show the HCL warning.
+      const hclWarning = best.sap && !hclMeetsSAP && best.buffer >= 0;
+      const hclRisky = hclWarning;
 
       out.push({ ...s, match: best, hclWarning, hclRisky });
     }
@@ -268,13 +268,13 @@ function PSLEShortlister() {
       if (!tracks.has(t)) continue;
       const cell = s.tracks[t];
       if (cell.value == null) continue;
-      const buffer = cell.value - score;
-      if (buffer < -2) continue;
-      if (!best || buffer > best.buffer) {
+      const buffer = score - cell.value;
+      if (buffer > 2) continue;
+      if (!best || buffer < best.buffer) {
         best = { track: t, cutoff: cell.value, sap: cell.sap, buffer };
       }
     }
-    const hclRisky = best && best.sap && !hclMeetsSAP;
+    const hclRisky = best && best.sap && !hclMeetsSAP && best.buffer >= 0;
     return { ...s, match: best, hclRisky };
   });
 
@@ -304,17 +304,17 @@ function PSLEShortlister() {
 
   // Strategy summary
   const strategy = React.useMemo(() => {
-    const overshoot = pickedWithMatch.filter((s) => s.match && s.match.buffer < 0).length;
+    const overshoot = pickedWithMatch.filter((s) => s.match && s.match.buffer > 0).length;
     const reach = pickedWithMatch.filter((s) => s.match && (s.match.buffer === 0 || s.hclRisky)).length;
-    const safe = pickedWithMatch.filter((s) => s.match && s.match.buffer >= 1 && !s.hclRisky).length;
+    const safe = pickedWithMatch.filter((s) => s.match && s.match.buffer <= -1 && !s.hclRisky).length;
     const zoneSet = new Set(pickedWithMatch.map((s) => s.zone));
     return { overshoot, reach, safe, zones: [...zoneSet] };
   }, [pickedWithMatch]);
 
   const bufferTone = (buffer) => {
-    if (buffer < 0) return "tight";        // red — over cut-off
-    if (buffer >= 1) return "comfort";     // green — +1, +2, or more
-    return "borderline";                    // yellow — exactly +0
+    if (buffer > 0) return "tight";        // red — over cut-off (+1, +2)
+    if (buffer < 0) return "comfort";      // green — below cut-off (safer)
+    return "borderline";                    // yellow — exactly tied (0)
   };
 
   return (
@@ -626,12 +626,12 @@ function PSLEShortlister() {
           </div>
 
           <div className="mono text-[11px] text-stone-500 mt-3 leading-relaxed">
-            <span className="text-stone-700 font-semibold">Buffer</span> = cut-off minus your score.
-            Tones: <span className="pill tone-comfort">+1</span> safe · <span className="pill tone-borderline">+0</span> borderline · <span className="pill tone-tight">−1</span> over cut-off.
-            Schools up to 2 points above your score are shown so you can see near-miss reach options.
+            <span className="text-stone-700 font-semibold">Buffer</span> = your score minus cut-off. Lower (more negative) = safer.
+            Tones: <span className="pill tone-comfort">−1</span> safe · <span className="pill tone-borderline">+0</span> borderline · <span className="pill tone-tight">+1</span> over cut-off.
+            Schools where your score is up to 2 points above cut-off are shown so you can see realistic reach options.
             <br/>
             <span className="text-indigo-700 font-bold">M</span> next to a cut-off = SAP track (Higher Chinese Merit required).
-            If your HCL is below Merit, the school is flagged <span className="pill tone-warn">low</span> and treated as not safe regardless of score buffer.
+            If your HCL is below Merit and your score doesn't already qualify you comfortably, the school is flagged <span className="pill tone-warn">low</span> and treated as not safe.
           </div>
         </section>
 
@@ -683,9 +683,9 @@ function PSLEShortlister() {
             <aside className="bg-stone-900 text-stone-50 p-6">
               <div className="mono text-[10px] tracking-widest text-stone-400 uppercase mb-4">Strategy</div>
               <div className="space-y-4">
-                <StratRow label="Over cut-off" value={strategy.overshoot} hint="−1 to −2 buffer" />
+                <StratRow label="Over cut-off" value={strategy.overshoot} hint="+1 to +2 buffer" />
                 <StratRow label="Reach" value={strategy.reach} hint="exactly +0 buffer" />
-                <StratRow label="Safe" value={strategy.safe} hint="+1 buffer or more" />
+                <StratRow label="Safe" value={strategy.safe} hint="−1 buffer or lower" />
                 <div className="border-t border-stone-700 pt-4">
                   <div className="mono text-[10px] tracking-widest text-stone-400 uppercase mb-2">Areas covered</div>
                   <div className="display text-sm leading-relaxed">
