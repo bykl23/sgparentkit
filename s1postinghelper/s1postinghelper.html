@@ -315,8 +315,30 @@ function PSLEShortlister() {
     .map((s, i) => `${i + 1}. ${s.name} — ${s.zone}${s.match ? ` (${s.match.track}, cut-off ${s.match.cutoff}${s.match.sap ? "M" : ""})` : ""}${s.hclRisky ? " [HCL risky]" : ""}`)
     .join("\n");
 
+  const [copied, setCopied] = React.useState(false);
+  const [showShareMenu, setShowShareMenu] = React.useState(false);
+
   const copyExport = async () => {
-    try { await navigator.clipboard.writeText(exportText); } catch (e) {}
+    try {
+      await navigator.clipboard.writeText(exportText);
+      setCopied(true);
+      setShowShareMenu(false);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (e) {}
+  };
+
+  const shareExport = async () => {
+    if (picks.length === 0) return;
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: "My S1 School Choices", text: exportText });
+        return;
+      } catch (e) {
+        if (e.name === "AbortError") return;
+        // share failed — fall through to menu
+      }
+    }
+    setShowShareMenu((v) => !v);
   };
 
   // Strategy summary
@@ -738,13 +760,52 @@ function PSLEShortlister() {
                 </div>
               </div>
 
-              <button
-                onClick={copyExport}
-                disabled={picks.length === 0}
-                className="w-full mt-6 bg-stone-50 text-stone-900 mono text-xs py-3 hover:bg-amber-200 transition-colors disabled:opacity-40"
-              >
-                Copy list to clipboard
-              </button>
+              <div className="mt-6 flex gap-2">
+                <button
+                  onClick={copyExport}
+                  disabled={picks.length === 0}
+                  className="flex-1 bg-stone-50 text-stone-900 mono text-xs py-3 hover:bg-amber-200 transition-colors disabled:opacity-40"
+                >
+                  {copied ? "✓ Copied!" : "Copy"}
+                </button>
+                <button
+                  onClick={shareExport}
+                  disabled={picks.length === 0}
+                  className={`flex-1 mono text-xs py-3 transition-colors disabled:opacity-40 ${showShareMenu ? "bg-amber-300 text-stone-900" : "bg-stone-700 text-stone-50 hover:bg-stone-600"}`}
+                >
+                  Share ↗
+                </button>
+              </div>
+
+              {showShareMenu && picks.length > 0 && (
+                <div className="mt-2 bg-stone-800 p-3 space-y-2">
+                  <div className="mono text-[10px] text-stone-400 uppercase tracking-widest mb-3">Share via</div>
+                  <a
+                    href={`https://wa.me/?text=${encodeURIComponent(exportText)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => setShowShareMenu(false)}
+                    className="flex items-center gap-2 w-full bg-[#25D366] text-white mono text-xs py-2 px-3 hover:opacity-90 transition-opacity"
+                  >
+                    <span>💬</span><span>WhatsApp</span>
+                  </a>
+                  <a
+                    href={`https://t.me/share/url?url=%20&text=${encodeURIComponent(exportText)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => setShowShareMenu(false)}
+                    className="flex items-center gap-2 w-full bg-[#2CA5E0] text-white mono text-xs py-2 px-3 hover:opacity-90 transition-opacity"
+                  >
+                    <span>✈️</span><span>Telegram</span>
+                  </a>
+                  <button
+                    onClick={copyExport}
+                    className="flex items-center gap-2 w-full bg-stone-600 text-stone-50 mono text-xs py-2 px-3 hover:bg-stone-500 transition-colors text-left"
+                  >
+                    <span>📋</span><span>{copied ? "✓ Copied — paste in WeChat / Line / SMS" : "Copy — paste in WeChat / Line / SMS"}</span>
+                  </button>
+                </div>
+              )}
 
               {picks.length > 0 && (
                 <pre className="mt-4 mono text-[10px] text-stone-300 whitespace-pre-wrap bg-stone-800 p-3 max-h-40 overflow-y-auto">
